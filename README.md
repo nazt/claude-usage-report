@@ -20,7 +20,7 @@ Read ~/.claude/stats-cache.json and generate a beautiful OLED dark-mode HTML usa
 7. Value analysis: estimated API cost vs $200 Max plan, show multiplier
 
 Use Tailwind CDN, glassmorphism cards, gradients. Make it responsive.
-Calculate cost with Opus pricing: $15/M input, $75/M output, $1.50/M cache read, $3.75/M cache create.
+Calculate cost with Opus 4.5/4.6 pricing: $5/M input, $25/M output, $0.50/M cache read, $6.25/M cache write (5min), $10/M cache write (1hr).
 
 Also export data.json with the computed metrics.
 ```

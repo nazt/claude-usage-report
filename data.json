@@ -1,11 +1,11 @@
 {
-  "generated": "2026-02-06T05:58:20.201Z",
+  "generated": "2026-02-06T06:43:23.531Z",
   "totalTokens": 15027925074,
   "totalInput": 5239897,
   "totalOutput": 11666934,
   "totalCacheRead": 14124319960,
   "totalCacheCreate": 886698283,
-  "costEstimate": 25465.21700625,
+  "costEstimate": 12921.89708375,
   "totalMessages": 420495,
   "totalSessions": 5612,
   "totalToolCalls": 64790,

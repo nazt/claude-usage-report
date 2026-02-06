@@ -39,8 +39,9 @@ const totalOutput = models.reduce((s, m) => s + (m.outputTokens || 0), 0);
 const totalCacheRead = models.reduce((s, m) => s + (m.cacheReadInputTokens || 0), 0);
 const totalCacheCreate = models.reduce((s, m) => s + (m.cacheCreationInputTokens || 0), 0);
 
-// Cost estimate (Opus pricing: $15/M input, $75/M output, $1.50/M cache read, $3.75/M cache create)
-const costEstimate = (totalInput * 15 + totalOutput * 75 + totalCacheRead * 1.5 + totalCacheCreate * 3.75) / 1_000_000;
+// Cost estimate (Opus 4.5/4.6 pricing: $5/M input, $25/M output, $0.50/M cache read, $6.25/M cache write 5min)
+// Using 5min cache write as default since stats don't distinguish cache durations
+const costEstimate = (totalInput * 5 + totalOutput * 25 + totalCacheRead * 0.5 + totalCacheCreate * 6.25) / 1_000_000;
 
 const daily = stats.dailyActivity || [];
 const totalMessages = stats.totalMessages || daily.reduce((s, d) => s + d.messageCount, 0);
