@@ -39,9 +39,31 @@ const totalOutput = models.reduce((s, m) => s + (m.outputTokens || 0), 0);
 const totalCacheRead = models.reduce((s, m) => s + (m.cacheReadInputTokens || 0), 0);
 const totalCacheCreate = models.reduce((s, m) => s + (m.cacheCreationInputTokens || 0), 0);
 
-// Cost estimate (Opus 4.5/4.6 pricing: $5/M input, $25/M output, $0.50/M cache read, $6.25/M cache write 5min)
-// Using 5min cache write as default since stats don't distinguish cache durations
-const costEstimate = (totalInput * 5 + totalOutput * 25 + totalCacheRead * 0.5 + totalCacheCreate * 6.25) / 1_000_000;
+// Per-model pricing (Feb 2026, https://docs.anthropic.com/en/docs/about-claude/pricing)
+const PRICING = {
+  opus:   { input: 5,    output: 25,   cacheRead: 0.50, cacheWrite: 6.25 },
+  sonnet: { input: 3,    output: 15,   cacheRead: 0.30, cacheWrite: 3.75 },
+  haiku:  { input: 1,    output: 5,    cacheRead: 0.10, cacheWrite: 1.25 },
+  other:  { input: 3,    output: 15,   cacheRead: 0.30, cacheWrite: 3.75 }, // default to Sonnet-tier
+};
+
+function modelPricing(id) {
+  if (id.includes('opus')) return PRICING.opus;
+  if (id.includes('sonnet')) return PRICING.sonnet;
+  if (id.includes('haiku')) return PRICING.haiku;
+  return PRICING.other;
+}
+
+// Calculate cost per-model, then sum
+const costEstimate = models.reduce((sum, m) => {
+  const p = modelPricing(m.id);
+  return sum + (
+    (m.inputTokens || 0) * p.input +
+    (m.outputTokens || 0) * p.output +
+    (m.cacheReadInputTokens || 0) * p.cacheRead +
+    (m.cacheCreationInputTokens || 0) * p.cacheWrite
+  ) / 1_000_000;
+}, 0);
 
 const daily = stats.dailyActivity || [];
 const totalMessages = stats.totalMessages || daily.reduce((s, d) => s + d.messageCount, 0);
