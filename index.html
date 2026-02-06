@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Usage Report</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#1E40AF',
+            secondary: '#3B82F6',
+            accent: '#F59E0B',
+            surface: '#0a0a0f',
+            'surface-2': '#111118',
+            'surface-3': '#1a1a24',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; background: #000; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .oled-bg { background: radial-gradient(ellipse at top, #0d1117 0%, #000 50%); }
+    .glass { background: rgba(17, 17, 24, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); }
+    .glass-highlight { background: linear-gradient(135deg, rgba(30, 64, 175, 0.15) 0%, rgba(59, 130, 246, 0.08) 100%); border: 1px solid rgba(59, 130, 246, 0.2); }
+    .glow-blue { box-shadow: 0 0 60px rgba(59, 130, 246, 0.15); }
+    .glow-green { box-shadow: 0 0 60px rgba(16, 185, 129, 0.15); }
+    .text-glow-blue { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+    .text-glow-amber { text-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+    .stat-card { transition: all 0.2s ease; }
+    .stat-card:hover { transform: translateY(-2px); border-color: rgba(59, 130, 246, 0.3); }
+    .bar { transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+    .tooltip { opacity: 0; transition: opacity 0.15s ease; pointer-events: none; }
+    .bar-container:hover .tooltip { opacity: 1; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  </style>
+</head>
+<body class="oled-bg min-h-screen text-white antialiased">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+    <!-- Header -->
+    <header class="text-center mb-12">
+      <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight mb-2">Claude Usage Report</h1>
+      <p class="text-gray-500 text-sm font-mono">Dec 5, 2025 — 2026-02-05 &middot; Generated February 6, 2026 at 12:58 PM</p>
+      <div class="mt-3">
+        <a href="data.json" class="text-sm text-gray-500 hover:text-gray-300 transition-colors">Raw JSON</a>
+      </div>
+    </header>
+
+    <!-- Hero Stats -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-8">
+      <div class="glass stat-card rounded-2xl p-5">
+        <div class="text-xs text-gray-500 uppercase tracking-wider mb-2">Total Tokens</div>
+        <div class="text-2xl sm:text-3xl font-bold font-mono text-glow-blue text-secondary">15.03B</div>
+      </div>
+      <div class="glass stat-card rounded-2xl p-5">
+        <div class="text-xs text-gray-500 uppercase tracking-wider mb-2">Messages</div>
+        <div class="text-2xl sm:text-3xl font-bold font-mono text-emerald-400">420,495</div>
+        <div class="text-xs text-gray-600 mt-1">~9141/day</div>
+      </div>
+      <div class="glass stat-card rounded-2xl p-5">
+        <div class="text-xs text-gray-500 uppercase tracking-wider mb-2">Sessions</div>
+        <div class="text-2xl sm:text-3xl font-bold font-mono text-violet-400">5,612</div>
+      </div>
+      <div class="glass stat-card rounded-2xl p-5">
+        <div class="text-xs text-gray-500 uppercase tracking-wider mb-2">Tool Calls</div>
+        <div class="text-2xl sm:text-3xl font-bold font-mono text-amber-400">64,790</div>
+      </div>
+      <div class="glass stat-card rounded-2xl p-5">
+        <div class="text-xs text-gray-500 uppercase tracking-wider mb-2">API Est.</div>
+        <div class="text-2xl sm:text-3xl font-bold font-mono text-glow-amber text-accent">$25,465</div>
+        <div class="text-xs text-gray-600 mt-1">if paid per-token</div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid lg:grid-cols-2 gap-6 mb-8">
+
+      <!-- Token Breakdown -->
+      <div class="glass rounded-2xl p-6">
+        <h2 class="text-lg font-semibold mb-6">Token Breakdown</h2>
+        <div class="space-y-5">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm text-gray-400">Input (new)</span>
+              <span class="font-mono text-sm text-blue-400">5.24M</span>
+            </div>
+            <div class="h-2 bg-surface-3 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full" style="width: 0.0%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm text-gray-400">Output</span>
+              <span class="font-mono text-sm text-emerald-400">11.67M</span>
+            </div>
+            <div class="h-2 bg-surface-3 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full" style="width: 0.1%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm text-gray-400">Cache Read</span>
+              <span class="font-mono text-sm text-violet-400">14.12B</span>
+            </div>
+            <div class="h-2 bg-surface-3 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-violet-600 to-violet-400 rounded-full" style="width: 94.0%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm text-gray-400">Cache Creation</span>
+              <span class="font-mono text-sm text-amber-400">886.70M</span>
+            </div>
+            <div class="h-2 bg-surface-3 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full" style="width: 5.9%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 p-4 bg-surface-3/50 rounded-xl border border-white/5">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs text-gray-500 uppercase tracking-wider mb-1">New tokens (input + output)</div>
+              <div class="text-2xl font-bold font-mono text-white">16.91M</div>
+            </div>
+            <div class="text-right text-xs text-gray-600">
+              <div>Input 5.24M</div>
+              <div>+ Output 11.67M</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Distribution -->
+      <div class="glass rounded-2xl p-6">
+        <h2 class="text-lg font-semibold mb-6">Model Distribution</h2>
+        <div class="space-y-4">
+          <div>
+      <div class="flex justify-between items-center mb-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+          <span class="text-sm text-gray-300">opus-4-5</span>
+        </div>
+        <span class="font-mono text-sm text-violet-400">14.27B <span class="text-gray-600">(95.0%)</span></span>
+      </div>
+      <div class="h-1.5 bg-surface-3 rounded-full overflow-hidden">
+        <div class="h-full bg-violet-500 rounded-full" style="width: 95.0%"></div>
+      </div>
+    </div>
+<div>
+      <div class="flex justify-between items-center mb-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span class="text-sm text-gray-300">sonnet-4-5</span>
+        </div>
+        <span class="font-mono text-sm text-emerald-400">706.62M <span class="text-gray-600">(4.7%)</span></span>
+      </div>
+      <div class="h-1.5 bg-surface-3 rounded-full overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-full" style="width: 4.7%"></div>
+      </div>
+    </div>
+<div>
+      <div class="flex justify-between items-center mb-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+          <span class="text-sm text-gray-300">opus-4-6</span>
+        </div>
+        <span class="font-mono text-sm text-indigo-400">38.31M <span class="text-gray-600">(0.3%)</span></span>
+      </div>
+      <div class="h-1.5 bg-surface-3 rounded-full overflow-hidden">
+        <div class="h-full bg-indigo-500 rounded-full" style="width: 0.3%"></div>
+      </div>
+    </div>
+<div>
+      <div class="flex justify-between items-center mb-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+          <span class="text-sm text-gray-300">glm-4.7</span>
+        </div>
+        <span class="font-mono text-sm text-rose-400">9.70M <span class="text-gray-600">(0.1%)</span></span>
+      </div>
+      <div class="h-1.5 bg-surface-3 rounded-full overflow-hidden">
+        <div class="h-full bg-rose-500 rounded-full" style="width: 0.1%"></div>
+      </div>
+    </div>
+<div>
+      <div class="flex justify-between items-center mb-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span class="text-sm text-gray-300">haiku-4-5</span>
+        </div>
+        <span class="font-mono text-sm text-amber-400">260.6K <span class="text-gray-600">(0.0%)</span></span>
+      </div>
+      <div class="h-1.5 bg-surface-3 rounded-full overflow-hidden">
+        <div class="h-full bg-amber-500 rounded-full" style="width: 0.0%"></div>
+      </div>
+    </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Usage Chart -->
+    <div class="glass rounded-2xl p-6 mb-8">
+      <h2 class="text-lg font-semibold mb-6">Daily Activity <span class="ml-2 text-xs text-gray-600 font-normal">(messages per day)</span></h2>
+      <div class="flex items-end gap-[3px] h-48 overflow-x-auto pb-4">
+        <div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 5</div>
+        <div class="text-gray-400 font-mono">1,453 msgs</div>
+        <div class="text-gray-500">1 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 5.2%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 9</div>
+        <div class="text-gray-400 font-mono">841 msgs</div>
+        <div class="text-gray-500">1 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 3.0%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 22</div>
+        <div class="text-gray-400 font-mono">979 msgs</div>
+        <div class="text-gray-500">4 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 3.5%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 23</div>
+        <div class="text-gray-400 font-mono">1,294 msgs</div>
+        <div class="text-gray-500">5 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 4.7%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 24</div>
+        <div class="text-gray-400 font-mono">1,456 msgs</div>
+        <div class="text-gray-500">2 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 5.2%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 25</div>
+        <div class="text-gray-400 font-mono">437 msgs</div>
+        <div class="text-gray-500">2 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 1.6%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 26</div>
+        <div class="text-gray-400 font-mono">1,881 msgs</div>
+        <div class="text-gray-500">6 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 6.8%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 27</div>
+        <div class="text-gray-400 font-mono">1,357 msgs</div>
+        <div class="text-gray-500">2 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 4.9%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 28</div>
+        <div class="text-gray-400 font-mono">3,101 msgs</div>
+        <div class="text-gray-500">7 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 11.2%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 29</div>
+        <div class="text-gray-400 font-mono">7,596 msgs</div>
+        <div class="text-gray-500">11 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 27.4%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 30</div>
+        <div class="text-gray-400 font-mono">13,670 msgs</div>
+        <div class="text-gray-500">6 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 49.3%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Dec 31</div>
+        <div class="text-gray-400 font-mono">7,848 msgs</div>
+        <div class="text-gray-500">55 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 28.3%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-amber-500/30 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 1</div>
+        <div class="text-gray-400 font-mono">23,577 msgs</div>
+        <div class="text-gray-500">1294 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-amber-600 to-amber-400" style="height: 85.0%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-amber-500/30 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 2</div>
+        <div class="text-gray-400 font-mono">21,146 msgs</div>
+        <div class="text-gray-500">977 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-amber-600 to-amber-400" style="height: 76.2%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 3</div>
+        <div class="text-gray-400 font-mono">20,547 msgs</div>
+        <div class="text-gray-500">1183 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 74.0%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 4</div>
+        <div class="text-gray-400 font-mono">10,964 msgs</div>
+        <div class="text-gray-500">894 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 39.5%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 5</div>
+        <div class="text-gray-400 font-mono">6,660 msgs</div>
+        <div class="text-gray-500">624 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 24.0%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 6</div>
+        <div class="text-gray-400 font-mono">2,877 msgs</div>
+        <div class="text-gray-500">110 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 10.4%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 7</div>
+        <div class="text-gray-400 font-mono">5,366 msgs</div>
+        <div class="text-gray-500">14 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 19.3%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 8</div>
+        <div class="text-gray-400 font-mono">6,213 msgs</div>
+        <div class="text-gray-500">18 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 22.4%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 9</div>
+        <div class="text-gray-400 font-mono">1,560 msgs</div>
+        <div class="text-gray-500">8 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 5.6%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 10</div>
+        <div class="text-gray-400 font-mono">8,614 msgs</div>
+        <div class="text-gray-500">17 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 31.0%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 11</div>
+        <div class="text-gray-400 font-mono">7,911 msgs</div>
+        <div class="text-gray-500">22 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 28.5%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 12</div>
+        <div class="text-gray-400 font-mono">8,455 msgs</div>
+        <div class="text-gray-500">17 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 30.5%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 13</div>
+        <div class="text-gray-400 font-mono">6,293 msgs</div>
+        <div class="text-gray-500">15 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 22.7%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 14</div>
+        <div class="text-gray-400 font-mono">8,890 msgs</div>
+        <div class="text-gray-500">18 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 32.0%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 15</div>
+        <div class="text-gray-400 font-mono">4,681 msgs</div>
+        <div class="text-gray-500">10 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 16.9%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 16</div>
+        <div class="text-gray-400 font-mono">19,606 msgs</div>
+        <div class="text-gray-500">16 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 70.6%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 17</div>
+        <div class="text-gray-400 font-mono">6,904 msgs</div>
+        <div class="text-gray-500">4 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 24.9%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 18</div>
+        <div class="text-gray-400 font-mono">1,983 msgs</div>
+        <div class="text-gray-500">4 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 7.1%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-amber-500/30 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 21</div>
+        <div class="text-gray-400 font-mono">27,751 msgs</div>
+        <div class="text-gray-500">50 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-amber-600 to-amber-400" style="height: 100.0%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 22</div>
+        <div class="text-gray-400 font-mono">6,679 msgs</div>
+        <div class="text-gray-500">31 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 24.1%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 23</div>
+        <div class="text-gray-400 font-mono">9,157 msgs</div>
+        <div class="text-gray-500">7 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 33.0%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-amber-500/30 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 24</div>
+        <div class="text-gray-400 font-mono">22,142 msgs</div>
+        <div class="text-gray-500">7 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-amber-600 to-amber-400" style="height: 79.8%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-amber-500/30 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 25</div>
+        <div class="text-gray-400 font-mono">22,002 msgs</div>
+        <div class="text-gray-500">11 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-amber-600 to-amber-400" style="height: 79.3%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 26</div>
+        <div class="text-gray-400 font-mono">8,015 msgs</div>
+        <div class="text-gray-500">3 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 28.9%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 27</div>
+        <div class="text-gray-400 font-mono">9,156 msgs</div>
+        <div class="text-gray-500">8 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 33.0%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 28</div>
+        <div class="text-gray-400 font-mono">9,727 msgs</div>
+        <div class="text-gray-500">6 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 35.1%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 29</div>
+        <div class="text-gray-400 font-mono">9,908 msgs</div>
+        <div class="text-gray-500">12 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 35.7%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 30</div>
+        <div class="text-gray-400 font-mono">10,773 msgs</div>
+        <div class="text-gray-500">10 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 38.8%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Jan 31</div>
+        <div class="text-gray-400 font-mono">8,111 msgs</div>
+        <div class="text-gray-500">11 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 29.2%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Feb 1</div>
+        <div class="text-gray-400 font-mono">8,556 msgs</div>
+        <div class="text-gray-500">9 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 30.8%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Feb 2</div>
+        <div class="text-gray-400 font-mono">14,109 msgs</div>
+        <div class="text-gray-500">32 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 50.8%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Feb 3</div>
+        <div class="text-gray-400 font-mono">9,161 msgs</div>
+        <div class="text-gray-500">13 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 33.0%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Feb 4</div>
+        <div class="text-gray-400 font-mono">19,175 msgs</div>
+        <div class="text-gray-500">31 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 69.1%; min-height: 2px;"></div>
+    </div>
+<div class="bar-container flex flex-col items-center justify-end min-w-[14px] h-full relative group cursor-pointer">
+      <div class="tooltip absolute bottom-full mb-2 bg-surface-2 border border-white/10 px-3 py-2 rounded-lg text-xs whitespace-nowrap z-20 shadow-xl">
+        <div class="font-medium text-white">Feb 5</div>
+        <div class="text-gray-400 font-mono">11,913 msgs</div>
+        <div class="text-gray-500">24 sessions</div>
+      </div>
+      <div class="bar w-3 rounded-t bg-gradient-to-t from-violet-600 to-violet-400" style="height: 42.9%; min-height: 2px;"></div>
+    </div>
+      </div>
+      <div class="flex justify-between text-xs text-gray-600 mt-2">
+        <span>2025-12-05</span>
+        <span>2026-02-05</span>
+      </div>
+    </div>
+
+    <!-- Bottom Grid -->
+    <div class="grid lg:grid-cols-3 gap-6 mb-8">
+
+      <!-- Top Days -->
+      <div class="glass rounded-2xl p-6">
+        <h2 class="text-lg font-semibold mb-4">Top Days</h2>
+        <div class="space-y-2">
+          <div class="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+      <span class="w-7 h-7 flex items-center justify-center bg-amber-500 text-black text-sm font-bold rounded-lg">1</span>
+      <span class="flex-1 text-sm">Jan 21</span>
+      <span class="font-mono text-sm text-gray-400">27,751 msgs</span>
+    </div>
+<div class="flex items-center gap-3 p-3 bg-surface-3/50 rounded-xl">
+      <span class="w-7 h-7 flex items-center justify-center bg-gray-700 text-gray-300 text-sm font-bold rounded-lg">2</span>
+      <span class="flex-1 text-sm">Jan 1</span>
+      <span class="font-mono text-sm text-gray-400">23,577 msgs</span>
+    </div>
+<div class="flex items-center gap-3 p-3 bg-surface-3/50 rounded-xl">
+      <span class="w-7 h-7 flex items-center justify-center bg-gray-700 text-gray-300 text-sm font-bold rounded-lg">3</span>
+      <span class="flex-1 text-sm">Jan 24</span>
+      <span class="font-mono text-sm text-gray-400">22,142 msgs</span>
+    </div>
+<div class="flex items-center gap-3 p-3 bg-surface-3/50 rounded-xl">
+      <span class="w-7 h-7 flex items-center justify-center bg-gray-700 text-gray-300 text-sm font-bold rounded-lg">4</span>
+      <span class="flex-1 text-sm">Jan 25</span>
+      <span class="font-mono text-sm text-gray-400">22,002 msgs</span>
+    </div>
+<div class="flex items-center gap-3 p-3 bg-surface-3/50 rounded-xl">
+      <span class="w-7 h-7 flex items-center justify-center bg-gray-700 text-gray-300 text-sm font-bold rounded-lg">5</span>
+      <span class="flex-1 text-sm">Jan 2</span>
+      <span class="font-mono text-sm text-gray-400">21,146 msgs</span>
+    </div>
+        </div>
+      </div>
+
+      <!-- Hour Distribution -->
+      <div class="glass rounded-2xl p-6">
+        <h2 class="text-lg font-semibold mb-4">Activity by Hour</h2>
+        <div class="flex gap-[2px] items-end">
+          <div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 34.9%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">0</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 28.9%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">1</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 27.2%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">2</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 1.0%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">3</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 1.0%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">4</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 8.1%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">5</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 5.7%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">6</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 62.3%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">7</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 78.7%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">8</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 97.2%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">9</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 100.0%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">10</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 69.4%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">11</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 60.0%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">12</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 69.4%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">13</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 65.5%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">14</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 84.5%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">15</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 75.5%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">16</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 59.6%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">17</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 37.7%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">18</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 55.1%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">19</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 47.9%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">20</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 47.4%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">21</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 37.9%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">22</span>
+    </div>
+<div class="flex flex-col items-center gap-1 flex-1">
+      <div class="w-full bg-surface-3 rounded-t relative" style="height: 60px;">
+        <div class="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t" style="height: 40.6%"></div>
+      </div>
+      <span class="text-[10px] text-gray-600">23</span>
+    </div>
+        </div>
+      </div>
+
+      <!-- Value Analysis -->
+      <div class="glass-highlight glow-green rounded-2xl p-6">
+        <h2 class="text-lg font-semibold mb-4">Value Analysis</h2>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-400">API Cost (est.)</span>
+            <span class="text-xl font-bold font-mono text-red-400">$25,465</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-400">Max Plan</span>
+            <span class="text-xl font-bold font-mono text-emerald-400">$200</span>
+          </div>
+          <div class="h-px bg-white/10"></div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-400">Value Multiplier</span>
+            <span class="text-2xl font-bold font-mono text-glow-amber text-accent">127x</span>
+          </div>
+          <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+            <p class="text-xs text-emerald-400 text-center">
+              Cache Read = 94.0% of all tokens — saves most of the cost
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="text-center text-gray-600 text-xs py-6 border-t border-white/5">
+      <p>Generated by <a href="https://github.com/nazt/claude-usage-report" class="text-gray-500 hover:text-gray-300">claude-usage-report</a></p>
+      <p class="mt-1 font-mono">2026-02-06T05:58:20.201Z</p>
+    </footer>
+  </div>
+</body>
+</html>
